@@ -493,7 +493,7 @@ func searchChairs(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	conditions = append(conditions, "stock > 0")
+	conditions = append(conditions, "stock >= 1")
 
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
@@ -562,7 +562,7 @@ func buyChair(c echo.Context) error {
 	defer tx.Rollback()
 
 	var chair Chair
-	err = tx.QueryRowx("SELECT id,name,description,thumbnail,price,height,width,depth,color,features,kind,popularity,stock FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
+	err = tx.QueryRowx("SELECT id,name,description,thumbnail,price,height,width,depth,color,features,kind,popularity,stock FROM chair WHERE id = ? AND stock >= 1 FOR UPDATE", id).StructScan(&chair)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
@@ -593,7 +593,7 @@ func getChairSearchCondition(c echo.Context) error {
 
 func getLowPricedChair(c echo.Context) error {
 	var chairs []Chair
-	query := `SELECT id,name,description,thumbnail,price,height,width,depth,color,features,kind,popularity,stock FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
+	query := `SELECT id,name,description,thumbnail,price,height,width,depth,color,features,kind,popularity,stock FROM chair WHERE stock >= 1 ORDER BY price ASC, id ASC LIMIT ?`
 	err := db.Select(&chairs, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {

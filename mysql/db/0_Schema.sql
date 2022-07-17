@@ -96,7 +96,7 @@ CREATE TABLE isuumo.chair
     INDEX depth_id_idx (depth_id),
     INDEX price_id_idx (price_id),
     INDEX color_id_idx (color_id),
-    INDEX kind_id_idx (price_id),
+    INDEX kind_id_idx (kind_id),
     INDEX sort_idx (popularity_rev, id),
     INDEX low_price_sort_idx (price, id)
 )
