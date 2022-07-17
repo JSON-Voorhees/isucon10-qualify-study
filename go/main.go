@@ -680,8 +680,8 @@ func postEstate(c echo.Context) error {
 	defer tx.Rollback()
 
 	query := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
-	values := make([]string, len(records))
-	params := make([]interface{}, len(records))
+	values := make([]string, 0)
+	params := make([]interface{}, 0)
 
 	for _, row := range records {
 		rm := RecordMapper{Record: row}
