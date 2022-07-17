@@ -683,7 +683,7 @@ func postEstate(c echo.Context) error {
 	values := make([]string, len(records))
 	params := make([]interface{}, len(records))
 
-	for i, row := range records {
+	for _, row := range records {
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
 		name := rm.NextString()
@@ -702,8 +702,8 @@ func postEstate(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 		// _, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		values[i] = "(?,?,?,?,?,?,?,?,?,?,?,?)"
-		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // append消したい
+		values = append(values, "(?,?,?,?,?,?,?,?,?,?,?,?)")                                                                                       // TODO:append消したい
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // TODO:append消したい
 	}
 
 	valuesList := strings.Join(values, ",")
