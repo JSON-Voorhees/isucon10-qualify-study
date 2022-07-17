@@ -820,7 +820,6 @@ func searchEstates(c echo.Context) error {
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
 	val, err := Cache.Get("LowPriceEstate").Result()
-	c.Logger().Debug(val)
 	if err != nil && err == redis.Nil {
 		// キャッシュがないときの処理
 		query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
@@ -836,8 +835,9 @@ func getLowPricedEstate(c echo.Context) error {
 		// キャッシュに乗せる
 		b, _ := json.Marshal(estates)
 		Cache.Set("LowPriceEstate", string(b), 0).Err()
+	} else {
+		json.Unmarshal([]byte(val), &estates)
 	}
-	json.Unmarshal([]byte(val), &estates)
 	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
 }
 
