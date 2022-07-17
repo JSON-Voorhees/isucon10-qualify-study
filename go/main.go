@@ -396,12 +396,12 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		c.Logger().Errorf("failed to begin tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer tx.Rollback()
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	c.Logger().Errorf("failed to begin tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
+	// defer tx.Rollback()
 
 	query := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES "
 	values := make([]string, 0)
@@ -434,16 +434,16 @@ func postChair(c echo.Context) error {
 		// }
 	}
 	valuesList := strings.Join(values, ",")
-	_, err = tx.Exec(query+valuesList, params...)
+	_, err = db.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if err := tx.Commit(); err != nil {
-		c.Logger().Errorf("failed to commit tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// if err := tx.Commit(); err != nil {
+	// 	c.Logger().Errorf("failed to commit tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -659,12 +659,12 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		c.Logger().Errorf("failed to begin tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer tx.Rollback()
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	c.Logger().Errorf("failed to begin tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
+	// defer tx.Rollback()
 
 	query := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
 	values := make([]string, 0)
@@ -694,16 +694,16 @@ func postEstate(c echo.Context) error {
 	}
 
 	valuesList := strings.Join(values, ",")
-	_, err = tx.Exec(query+valuesList, params...)
+	_, err = db.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if err := tx.Commit(); err != nil {
-		c.Logger().Errorf("failed to commit tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// if err := tx.Commit(); err != nil {
+	// 	c.Logger().Errorf("failed to commit tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -816,7 +816,7 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
+	query := `SELECTOR id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
 	err := db.Select(&estates, query, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
