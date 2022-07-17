@@ -345,6 +345,8 @@ func main() {
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
 	e.Logger.Fatal(e.Start(serverPort))
+
+	SetupRedis() // Redis setup
 }
 
 func initialize(c echo.Context) error {
@@ -816,8 +818,8 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	SetupRedis() // Redis setup
 	val, err := Cache.Get("LowPriceEstate").Result()
+	c.Logger().Debug(val)
 	if err != nil && err == redis.Nil {
 		// キャッシュがないときの処理
 		query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
