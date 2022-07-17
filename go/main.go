@@ -399,6 +399,9 @@ func initialize(c echo.Context) error {
 	// 	log.Fatalf("failed to set slow_query_log=1 on dbChair: %s.", err.Error())
 	// }
 
+	// キャッシュを消す
+	Cache.Do("DEL", "LowPriceEstate")
+
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
 	})
