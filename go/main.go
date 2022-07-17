@@ -15,6 +15,8 @@ import (
 
 	_ "net/http/pprof"
 
+	// "github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
@@ -24,6 +26,8 @@ import (
 
 const Limit = 20
 const NazotteLimit = 50
+
+var Cache *redis.Client
 
 var colorIdMap = map[string]int{
 	"黒":    1,
@@ -719,8 +723,8 @@ func postEstate(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 		// _, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		values = append(values, "(?,?,?,?,?,?,?,?,?,?,?,?)")                                                                                       // TODO:append消したい
-		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // TODO:append消したい
+		values = append(values, "(?,?,?,?,?,?,?,?,?,?,?,?)")                                                                                       //
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) //
 	}
 
 	valuesList := strings.Join(values, ",")
@@ -729,6 +733,8 @@ func postEstate(c echo.Context) error {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	// キャッシュを消す
+	Cache.Do("DEL", "LowPriceEstate")
 
 	// if err := tx.Commit(); err != nil {
 	// 	c.Logger().Errorf("failed to commit tx: %v", err)
@@ -846,17 +852,25 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
-	err := dbEstate.Select(&estates, query, Limit)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Logger().Error("getLowPricedEstate not found")
-			return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+	SetupRedis() // Redis setup
+	val, err := Cache.Get("LowPriceEstate").Result()
+	if err != nil && err == redis.Nil {
+		// キャッシュがないときの処理
+		query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
+		err := dbEstate.Select(&estates, query, Limit)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.Logger().Error("getLowPricedEstate not found")
+				return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+			}
+			c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-		c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		// キャッシュに乗せる
+		b, _ := json.Marshal(estates)
+		Cache.Set("LowPriceEstate", string(b), 0).Err()
 	}
-
+	json.Unmarshal([]byte(val), &estates)
 	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
 }
 
@@ -1014,4 +1028,11 @@ func (cs Coordinates) coordinatesToText() string {
 		points = append(points, fmt.Sprintf("%f %f", c.Latitude, c.Longitude))
 	}
 	return fmt.Sprintf("'POLYGON((%s))'", strings.Join(points, ","))
+}
+
+func SetupRedis() {
+	Cache = redis.NewClient(&redis.Options{
+		// docker-compose.ymlに指定したservice名+port
+		Addr: "127.0.0.1:6379",
+	})
 }
