@@ -119,7 +119,7 @@ CREATE TABLE isuumo.chair
     INDEX price_height_width_kind_idx (price_id, height_id, width_id, kind_id, color_id),
     INDEX price_width_depth_color_idx (price_id, width_id, depth_id, color_id),
     INDEX price_height_color_idx (price_id, height_id, color_id),
-    INDEX price_width_color_idx (price_id, widht_id, color_id),
+    INDEX price_width_color_idx (price_id, width_id, color_id),
     INDEX price_depth_color_idx (price_id, depth_id, color_id),
     INDEX price_height_kind_color_idx (price_id, height_id, kind_id, color_id),
     INDEX price_depth_kind_color_idx (price_id, depth_id, kind_id, color_id),
