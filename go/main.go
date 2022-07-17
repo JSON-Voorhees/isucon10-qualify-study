@@ -279,6 +279,12 @@ func main() {
 	db.SetMaxOpenConns(10)
 	defer db.Close()
 
+	// スロークエリを停止
+	_, err = db.Exec("SET GLOBAL slow_query_log=0;")
+	if err != nil {
+		log.Fatalf("failed to set slow_query_log=0: %s.", err.Error())
+	}
+
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
 	e.Logger.Fatal(e.Start(serverPort))
@@ -306,6 +312,11 @@ func initialize(c echo.Context) error {
 			c.Logger().Errorf("Initialize script error : %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
+	}
+	// スロークエリを開始
+	_, err := db.Exec("SET GLOBAL slow_query_log=1;")
+	if err != nil {
+		log.Fatalf("failed to set slow_query_log=1: %s.", err.Error())
 	}
 
 	return c.JSON(http.StatusOK, InitializeResponse{
