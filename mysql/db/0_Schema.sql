@@ -26,7 +26,7 @@ CREATE TABLE isuumo.estate
 
 CREATE TABLE isuumo.chair
 (
-    id          INTEGER         NOT NULL PRIMARY KEY,
+    id          INTEGER         NOT NULL,
     name        VARCHAR(64)     NOT NULL,
     description VARCHAR(4096)   NOT NULL,
     thumbnail   VARCHAR(128)    NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE isuumo.chair
     stock       INTEGER         NOT NULL,
     height_id    INTEGER AS (CASE
         WHEN price < 80 THEN 0
-        WHEN price < 110 jand price >= 80 THEN 1
+        WHEN price < 110 and price >= 80 THEN 1
         WHEN price < 150 and price >= 110 THEN 2
         WHEN price >= 150 THEN 3
     END) STORED,
@@ -66,17 +66,18 @@ CREATE TABLE isuumo.chair
         WHEN price >= 15000 THEN 5
     END) STORED,
     color_id    INTEGER AS (CASE
-        WHEN color == "黒" THEN 1
-        WHEN color == "赤" THEN 3
-        WHEN color == "青" THEN 4
-        WHEN color == "緑" THEN 5
-        WHEN color == "黄" THEN 6
-        WHEN color == "紫" THEN 7
-        WHEN color == "ピンク" THEN 8
-        WHEN color == "オレンジ" THEN 9
-        WHEN color == "水色" THEN 10
-        WHEN color == "ネイビー" THEN 11
-        WHEN color == "ベージュ" THEN 12
+        WHEN color = "黒" THEN 1
+        WHEN color = "白" THEN 2
+        WHEN color = "赤" THEN 3
+        WHEN color = "青" THEN 4
+        WHEN color = "緑" THEN 5
+        WHEN color = "黄" THEN 6
+        WHEN color = "紫" THEN 7
+        WHEN color = "ピンク" THEN 8
+        WHEN color = "オレンジ" THEN 9
+        WHEN color = "水色" THEN 10
+        WHEN color = "ネイビー" THEN 11
+        WHEN color = "ベージュ" THEN 12
     END) STORED,
     kind_id    INTEGER AS (CASE
         WHEN color = "ゲーミングチェア" THEN 1
