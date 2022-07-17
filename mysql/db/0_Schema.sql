@@ -45,8 +45,9 @@ CREATE TABLE isuumo.estate
     INDEX idx_door_width_door_height (`door_width`,`door_height`),
     INDEX idx_door_height_rent (`door_height`, `rent`),
     INDEX idx_door_width_rent (`door_width`, `rent`),
-    INDEX door_width_id_idx (door_width_id),
-    INDEX door_height_id_idx (door_height_id),
+    INDEX door_height_width_rent_idx (door_height_id, door_width_id, rent_id),
+    INDEX door_height_rent_idx (door_height_id, rent_id),
+    INDEX door_width_rent_idx (door_width_id, rent_id),
     INDEX rent_id_idx (rent_id)
 );
 
