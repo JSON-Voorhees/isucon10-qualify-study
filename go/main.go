@@ -471,7 +471,7 @@ func postChair(c echo.Context) error {
 		// }
 	}
 	valuesList := strings.Join(values, ",")
-	_, err = db.Exec(query+valuesList, params...)
+	_, err = dbChair.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -724,7 +724,7 @@ func postEstate(c echo.Context) error {
 	}
 
 	valuesList := strings.Join(values, ",")
-	_, err = db.Exec(query+valuesList, params...)
+	_, err = dbEstate.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
