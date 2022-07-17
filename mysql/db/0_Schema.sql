@@ -85,7 +85,7 @@ CREATE TABLE isuumo.chair
         WHEN kind = "エルゴノミクス" THEN 3
         WHEN kind = "ハンモック" THEN 4
     END) STORED,
-    popularity_rev    INTEGER AS (popularity * -1) STORED,
+    popularity_rev INTEGER AS (popularity * -1) STORED,
     PRIMARY KEY (id, stock),
     INDEX height_id_idx (height_id),
     INDEX width_id_idx (width_id),
@@ -93,7 +93,7 @@ CREATE TABLE isuumo.chair
     INDEX price_id_idx (price_id),
     INDEX color_id_idx (color_id),
     INDEX kind_id_idx (price_id),
-    INDEX sort_idx (popurarity_rev, id),
+    INDEX sort_idx (popularity_rev, id),
     INDEX low_price_sort_idx (price, id)
 )
 PARTITION BY RANGE COLUMNS(stock) (
