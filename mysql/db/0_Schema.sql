@@ -80,10 +80,10 @@ CREATE TABLE isuumo.chair
         WHEN color = "ベージュ" THEN 12
     END) STORED,
     kind_id    INTEGER AS (CASE
-        WHEN color = "ゲーミングチェア" THEN 1
-        WHEN color = "座椅子" THEN 2
-        WHEN color = "エルゴノミクス" THEN 3
-        WHEN color = "ハンモック" THEN 4
+        WHEN kind = "ゲーミングチェア" THEN 1
+        WHEN kind = "座椅子" THEN 2
+        WHEN kind = "エルゴノミクス" THEN 3
+        WHEN kind = "ハンモック" THEN 4
     END) STORED,
     popurarity_rev    INTEGER AS (popularity * -1) STORED,
     PRIMARY KEY (id, stock),
