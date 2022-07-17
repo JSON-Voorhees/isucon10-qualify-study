@@ -20,13 +20,34 @@ CREATE TABLE isuumo.estate
     features    VARCHAR(64)         NOT NULL,
     popularity  INTEGER             NOT NULL,
     popularity_desc INTEGER AS (-popularity) NOT NULL,
+    door_width_id    INTEGER AS (CASE
+        WHEN door_width < 80 THEN 0
+        WHEN door_width < 110 and price >= 80 THEN 1
+        WHEN door_width < 150 and price >= 110 THEN 2
+        WHEN door_width >= 150 THEN 3
+    END) STORED,
+    door_height_id    INTEGER AS (CASE
+        WHEN door_height < 80 THEN 0
+        WHEN door_height < 110 and price >= 80 THEN 1
+        WHEN door_height < 150 and price >= 110 THEN 2
+        WHEN door_height >= 150 THEN 3
+    END) STORED,
+    rent_id INTEGER AS (CASE
+        WHEN rent < 50000 THEN 0
+        WHEN rent < 100000 and price >= 50000 THEN 1
+        WHEN rent < 150000 and price >= 100000 THEN 2
+        WHEN rent >= 150000 THEN 3
+    END) STORED,
     INDEX idx_rent (`rent`),
     INDEX idx_popularity_desc_id (`popularity_desc`, `id`),
     INDEX idx_rent_popularity_desc_id (`rent`,`popularity_desc`, `id`),
     SPATIAL INDEX idx_geo (`geo`),
     INDEX idx_door_width_door_height (`door_width`,`door_height`),
     INDEX idx_door_height_rent (`door_height`, `rent`),
-    INDEX idx_door_width_rent (`door_width`, `rent`)
+    INDEX idx_door_width_rent (`door_width`, `rent`),
+    INDEX door_width_id_idx (door_width_id),
+    INDEX door_height_id_idx (door_height_id),
+    INDEX rent_id_idx (rent_id)
 );
 
 CREATE TABLE isuumo.chair
