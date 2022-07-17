@@ -519,9 +519,6 @@ func searchChairs(c echo.Context) error {
 
 	res.Chairs = chairs
 
-	// log
-	c.Echo().Logger.Info("受け取ったパラメータ:%v, sql: %v, %v, response: %v", c.QueryParams(), countQuery+searchCondition, params, chairs)
-
 	return c.JSON(http.StatusOK, res)
 }
 

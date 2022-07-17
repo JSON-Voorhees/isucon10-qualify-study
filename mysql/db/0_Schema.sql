@@ -40,22 +40,22 @@ CREATE TABLE isuumo.chair
     popularity  INTEGER         NOT NULL,
     stock       INTEGER         NOT NULL,
     height_id    INTEGER AS (CASE
-        WHEN price < 80 THEN 0
-        WHEN price < 110 and price >= 80 THEN 1
-        WHEN price < 150 and price >= 110 THEN 2
-        WHEN price >= 150 THEN 3
+        WHEN height < 80 THEN 0
+        WHEN height < 110 and price >= 80 THEN 1
+        WHEN height < 150 and price >= 110 THEN 2
+        WHEN height >= 150 THEN 3
     END) STORED,
     width_id    INTEGER AS (CASE
-        WHEN price < 80 THEN 0
-        WHEN price < 110 and price >= 80 THEN 1
-        WHEN price < 150 and price >= 110 THEN 2
-        WHEN price >= 150 THEN 3
+        WHEN width < 80 THEN 0
+        WHEN width < 110 and price >= 80 THEN 1
+        WHEN width < 150 and price >= 110 THEN 2
+        WHEN width >= 150 THEN 3
     END) STORED,
     depth_id    INTEGER AS (CASE
-        WHEN price < 80 THEN 0
-        WHEN price < 110 and price >= 80 THEN 1
-        WHEN price < 150 and price >= 110 THEN 2
-        WHEN price >= 150 THEN 3
+        WHEN depth < 80 THEN 0
+        WHEN depth < 110 and price >= 80 THEN 1
+        WHEN depth < 150 and price >= 110 THEN 2
+        WHEN depth >= 150 THEN 3
     END) STORED,
     price_id    INTEGER AS (CASE
         WHEN price < 3000 THEN 0
