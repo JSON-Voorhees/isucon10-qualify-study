@@ -680,10 +680,10 @@ func postEstate(c echo.Context) error {
 	defer tx.Rollback()
 
 	query := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
-	var values string
+	values := make([]string, len(records)))
 	params := make([]interface{}, len(records))
 
-	for _, row := range records {
+	for i, row := range records {
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
 		name := rm.NextString()
@@ -702,10 +702,12 @@ func postEstate(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 		// _, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		values = values + "(?,?,?,?,?,?,?,?,?,?,?,?), "
-		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
+		values[i] = "(?,?,?,?,?,?,?,?,?,?,?,?)"
+		params    = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // append消したい
 	}
-	_, err = tx.Exec(query+values, params...)
+
+	valuesList := strings.Join(values, ",")
+	_, err = tx.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
