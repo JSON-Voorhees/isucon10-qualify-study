@@ -15,6 +15,8 @@ import (
 
 	_ "net/http/pprof"
 
+	// "github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
@@ -24,6 +26,8 @@ import (
 
 const Limit = 20
 const NazotteLimit = 50
+
+var Cache *redis.Client
 
 var colorIdMap = map[string]int{
 	"黒":    1,
@@ -285,7 +289,7 @@ func main() {
 	e.Logger.SetLevel(log.DEBUG)
 
 	// Middleware
-	//e.Use(middleware.Logger())
+	// e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	// Initialize
@@ -326,17 +330,20 @@ func main() {
 	}
 	dbChair.SetMaxOpenConns(10)
 	defer dbChair.Close()
-	/*
-		// スロークエリを停止
-		_, err = dbEstate.Exec("SET GLOBAL slow_query_log=0;")
-		if err != nil {
-			log.Fatalf("failed to set slow_query_log=0 on estate: %s.", err.Error())
-		}
 
-		_, err = dbChair.Exec("SET GLOBAL slow_query_log=0;")
-		if err != nil {
-			log.Fatalf("failed to set slow_query_log=0 on chair: %s.", err.Error())
-		}*/
+	// // スロークエリを停止
+	// _, err = dbEstate.Exec("SET GLOBAL slow_query_log=0;")
+	// if err != nil {
+	// 	log.Fatalf("failed to set slow_query_log=0 on estate: %s.", err.Error())
+	// }
+
+	// _, err = dbChair.Exec("SET GLOBAL slow_query_log=0;")
+	// if err != nil {
+	// 	log.Fatalf("failed to set slow_query_log=0 on chair: %s.", err.Error())
+	// }
+
+	// Redis setup
+	SetupRedis()
 
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
@@ -382,16 +389,15 @@ func initialize(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
-	/*
-		// スロークエリを開始
-		_, err := dbEstate.Exec("SET GLOBAL slow_query_log=1;")
-		if err != nil {
-			log.Fatalf("failed to set slow_query_log=1 on estate: %s.", err.Error())
-		}
-		_, err = dbChair.Exec("SET GLOBAL slow_query_log=1;")
-		if err != nil {
-			log.Fatalf("failed to set slow_query_log=1 on dbChair: %s.", err.Error())
-		}*/
+	// // スロークエリを開始
+	// _, err := dbEstate.Exec("SET GLOBAL slow_query_log=1;")
+	// if err != nil {
+	// 	log.Fatalf("failed to set slow_query_log=1 on estate: %s.", err.Error())
+	// }
+	// _, err = dbChair.Exec("SET GLOBAL slow_query_log=1;")
+	// if err != nil {
+	// 	log.Fatalf("failed to set slow_query_log=1 on dbChair: %s.", err.Error())
+	// }
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
@@ -441,13 +447,6 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	tx, err := dbChair.Begin()
-	if err != nil {
-		c.Logger().Errorf("failed to begin tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer tx.Rollback()
-
 	query := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES "
 	values := make([]string, 0)
 	params := make([]interface{}, 0)
@@ -479,16 +478,16 @@ func postChair(c echo.Context) error {
 		// }
 	}
 	valuesList := strings.Join(values, ",")
-	_, err = tx.Exec(query+valuesList, params...)
+	_, err = dbChair.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	if err := tx.Commit(); err != nil {
-		c.Logger().Errorf("failed to commit tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// if err := tx.Commit(); err != nil {
+	// 	c.Logger().Errorf("failed to commit tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -704,13 +703,6 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	tx, err := dbEstate.Begin()
-	if err != nil {
-		c.Logger().Errorf("failed to begin tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
-	defer tx.Rollback()
-
 	query := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
 	values := make([]string, 0)
 	params := make([]interface{}, 0)
@@ -734,21 +726,23 @@ func postEstate(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 		// _, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
-		values = append(values, "(?,?,?,?,?,?,?,?,?,?,?,?)")                                                                                       // TODO:append消したい
-		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // TODO:append消したい
+		values = append(values, "(?,?,?,?,?,?,?,?,?,?,?,?)")                                                                                       //
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) //
 	}
 
 	valuesList := strings.Join(values, ",")
-	_, err = tx.Exec(query+valuesList, params...)
+	_, err = dbEstate.Exec(query+valuesList, params...)
 	if err != nil {
 		c.Logger().Errorf("failed to insert estate: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	// キャッシュを消す
+	Cache.Do("DEL", "LowPriceEstate")
 
-	if err := tx.Commit(); err != nil {
-		c.Logger().Errorf("failed to commit tx: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// if err := tx.Commit(); err != nil {
+	// 	c.Logger().Errorf("failed to commit tx: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -825,18 +819,27 @@ func searchEstates(c echo.Context) error {
 
 func getLowPricedEstate(c echo.Context) error {
 	estates := make([]Estate, 0, Limit)
-	query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
-	err := dbEstate.Select(&estates, query, Limit)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Logger().Error("getLowPricedEstate not found")
-			return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+	val, err := Cache.Get("LowPriceEstate").Result()
+	Result := []byte{}
+	if err != nil && err == redis.Nil {
+		// キャッシュがないときの処理
+		query := `SELECT id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
+		err := dbEstate.Select(&estates, query, Limit)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.Logger().Error("getLowPricedEstate not found")
+				return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
+			}
+			c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
+			return c.NoContent(http.StatusInternalServerError)
 		}
-		c.Logger().Errorf("getLowPricedEstate DB execution error : %v", err)
-		return c.NoContent(http.StatusInternalServerError)
+		// キャッシュに乗せる
+		Result, _ = json.Marshal(EstateListResponse{Estates: estates})
+		Cache.Set("LowPriceEstate", Result, 0).Err()
+	} else {
+		Result = []byte(val)
 	}
-
-	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
+	return c.JSONBlob(http.StatusOK, Result)
 }
 
 func searchRecommendedEstateWithChair(c echo.Context) error {
@@ -993,4 +996,11 @@ func (cs Coordinates) coordinatesToText() string {
 		points = append(points, fmt.Sprintf("%f %f", c.Latitude, c.Longitude))
 	}
 	return fmt.Sprintf("'POLYGON((%s))'", strings.Join(points, ","))
+}
+
+func SetupRedis() {
+	Cache = redis.NewClient(&redis.Options{
+		// docker-compose.ymlに指定したservice名+port
+		Addr: "127.0.0.1:6379",
+	})
 }
