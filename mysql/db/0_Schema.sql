@@ -85,7 +85,7 @@ CREATE TABLE isuumo.chair
         WHEN kind = "エルゴノミクス" THEN 3
         WHEN kind = "ハンモック" THEN 4
     END) STORED,
-    popurarity_rev    INTEGER AS (popularity * -1) STORED,
+    popularity_rev    INTEGER AS (popularity * -1) STORED,
     PRIMARY KEY (id, stock),
     INDEX height_id_idx (height_id),
     INDEX width_id_idx (width_id),
