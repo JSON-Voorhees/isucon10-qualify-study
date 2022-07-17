@@ -5,7 +5,7 @@
 
 # alp settings
 NGINX_LOG=/var/log/nginx/access.log
-MATCHING=""
+MATCHING="/api/recommended_estate/\d+,/api/chair/buy/\d+,/api/chair/\d+,/api/estate/\d+,/api/estate/req_doc/\d+,/images/chair/.+\.png,/images/estate/.+\.png"
 FIELDS=count,2xx,3xx,4xx,5xx,method,uri,min,max,sum,avg,p99
 
 # slow query settings
