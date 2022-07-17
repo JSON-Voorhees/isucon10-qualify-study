@@ -25,6 +25,28 @@ import (
 const Limit = 20
 const NazotteLimit = 50
 
+var colorIdMap = map[string]int{
+	"黒":    1,
+	"白":    2,
+	"赤":    3,
+	"青":    4,
+	"緑":    5,
+	"黄":    6,
+	"紫":    7,
+	"ピンク":  8,
+	"オレンジ": 9,
+	"水色":   10,
+	"ネイビー": 11,
+	"ベージュ": 12,
+}
+
+var kindIdMap = map[string]int{
+	"ゲーミングチェア": 1,
+	"座椅子":      2,
+	"エルゴノミクス":  3,
+	"ハンモック":    4,
+}
+
 var db *sqlx.DB
 var mySQLConnectionData *MySQLConnectionEnv
 var chairSearchCondition ChairSearchCondition
@@ -417,81 +439,33 @@ func searchChairs(c echo.Context) error {
 	params := make([]interface{}, 0)
 
 	if c.QueryParam("priceRangeId") != "" {
-		chairPrice, err := getRange(chairSearchCondition.Price, c.QueryParam("priceRangeId"))
-		if err != nil {
-			c.Echo().Logger.Infof("priceRangeID invalid, %v : %v", c.QueryParam("priceRangeId"), err)
-			return c.NoContent(http.StatusBadRequest)
-		}
-
-		if chairPrice.Min != -1 {
-			conditions = append(conditions, "price >= ?")
-			params = append(params, chairPrice.Min)
-		}
-		if chairPrice.Max != -1 {
-			conditions = append(conditions, "price < ?")
-			params = append(params, chairPrice.Max)
-		}
+		conditions = append(conditions, "price_id = ?")
+		params = append(params, c.QueryParam("priceRangeId"))
 	}
 
 	if c.QueryParam("heightRangeId") != "" {
-		chairHeight, err := getRange(chairSearchCondition.Height, c.QueryParam("heightRangeId"))
-		if err != nil {
-			c.Echo().Logger.Infof("heightRangeIf invalid, %v : %v", c.QueryParam("heightRangeId"), err)
-			return c.NoContent(http.StatusBadRequest)
-		}
-
-		if chairHeight.Min != -1 {
-			conditions = append(conditions, "height >= ?")
-			params = append(params, chairHeight.Min)
-		}
-		if chairHeight.Max != -1 {
-			conditions = append(conditions, "height < ?")
-			params = append(params, chairHeight.Max)
-		}
+		conditions = append(conditions, "height_id = ?")
+		params = append(params, c.QueryParam("heightRangeId"))
 	}
 
 	if c.QueryParam("widthRangeId") != "" {
-		chairWidth, err := getRange(chairSearchCondition.Width, c.QueryParam("widthRangeId"))
-		if err != nil {
-			c.Echo().Logger.Infof("widthRangeID invalid, %v : %v", c.QueryParam("widthRangeId"), err)
-			return c.NoContent(http.StatusBadRequest)
-		}
-
-		if chairWidth.Min != -1 {
-			conditions = append(conditions, "width >= ?")
-			params = append(params, chairWidth.Min)
-		}
-		if chairWidth.Max != -1 {
-			conditions = append(conditions, "width < ?")
-			params = append(params, chairWidth.Max)
-		}
+		conditions = append(conditions, "width_id = ?")
+		params = append(params, c.QueryParam("widthRangeId"))
 	}
 
 	if c.QueryParam("depthRangeId") != "" {
-		chairDepth, err := getRange(chairSearchCondition.Depth, c.QueryParam("depthRangeId"))
-		if err != nil {
-			c.Echo().Logger.Infof("depthRangeId invalid, %v : %v", c.QueryParam("depthRangeId"), err)
-			return c.NoContent(http.StatusBadRequest)
-		}
-
-		if chairDepth.Min != -1 {
-			conditions = append(conditions, "depth >= ?")
-			params = append(params, chairDepth.Min)
-		}
-		if chairDepth.Max != -1 {
-			conditions = append(conditions, "depth < ?")
-			params = append(params, chairDepth.Max)
-		}
+		conditions = append(conditions, "depth_id = ?")
+		params = append(params, c.QueryParam("depthRangeId"))
 	}
 
 	if c.QueryParam("kind") != "" {
-		conditions = append(conditions, "kind = ?")
-		params = append(params, c.QueryParam("kind"))
+		conditions = append(conditions, "kind_id = ?")
+		params = append(params, kindIdMap[c.QueryParam("kind")])
 	}
 
 	if c.QueryParam("color") != "" {
-		conditions = append(conditions, "color = ?")
-		params = append(params, c.QueryParam("color"))
+		conditions = append(conditions, "color_id = ?")
+		params = append(params, colorIdMap[c.QueryParam("color")])
 	}
 
 	if c.QueryParam("features") != "" {
@@ -520,10 +494,10 @@ func searchChairs(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := "SELECT * FROM chair WHERE "
+	searchQuery := "SELECT id,name,description,thumbnail,price,height,width,depth,color,features,kind,popularity,stock FROM chair WHERE "
 	countQuery := "SELECT COUNT(*) FROM chair WHERE "
 	searchCondition := strings.Join(conditions, " AND ")
-	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
+	limitOffset := " ORDER BY popularity_rev ASC, id ASC LIMIT ? OFFSET ?"
 
 	var res ChairSearchResponse
 	err = db.Get(&res.Count, countQuery+searchCondition, params...)

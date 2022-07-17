@@ -38,5 +38,64 @@ CREATE TABLE isuumo.chair
     features    VARCHAR(64)     NOT NULL,
     kind        VARCHAR(64)     NOT NULL,
     popularity  INTEGER         NOT NULL,
-    stock       INTEGER         NOT NULL
+    stock       INTEGER         NOT NULL,
+    height_id    INTEGER AS (CASE
+        WHEN price < 80 THEN 0
+        WHEN price < 110 jand price >= 80 THEN 1
+        WHEN price < 150 and price >= 110 THEN 2
+        WHEN price >= 150 THEN 3
+    END) STORED,
+    width_id    INTEGER AS (CASE
+        WHEN price < 80 THEN 0
+        WHEN price < 110 and price >= 80 THEN 1
+        WHEN price < 150 and price >= 110 THEN 2
+        WHEN price >= 150 THEN 3
+    END) STORED,
+    depth_id    INTEGER AS (CASE
+        WHEN price < 80 THEN 0
+        WHEN price < 110 and price >= 80 THEN 1
+        WHEN price < 150 and price >= 110 THEN 2
+        WHEN price >= 150 THEN 3
+    END) STORED,
+    price_id    INTEGER AS (CASE
+        WHEN price < 3000 THEN 0
+        WHEN price < 6000 and price >= 3000 THEN 1
+        WHEN price < 9000 and price >= 6000 THEN 2
+        WHEN price < 12000 and price >= 9000 THEN 3
+        WHEN price < 15000 and price >= 12000 THEN 4
+        WHEN price >= 15000 THEN 5
+    END) STORED,
+    color_id    INTEGER AS (CASE
+        WHEN color == "黒" THEN 1
+        WHEN color == "赤" THEN 3
+        WHEN color == "青" THEN 4
+        WHEN color == "緑" THEN 5
+        WHEN color == "黄" THEN 6
+        WHEN color == "紫" THEN 7
+        WHEN color == "ピンク" THEN 8
+        WHEN color == "オレンジ" THEN 9
+        WHEN color == "水色" THEN 10
+        WHEN color == "ネイビー" THEN 11
+        WHEN color == "ベージュ" THEN 12
+    END) STORED,
+    kind_id    INTEGER AS (CASE
+        WHEN color = "ゲーミングチェア" THEN 1
+        WHEN color = "座椅子" THEN 2
+        WHEN color = "エルゴノミクス" THEN 3
+        WHEN color = "ハンモック" THEN 4
+    END) STORED,
+    popurarity_rev    INTEGER AS (popularity * -1) STORED,
+    PRIMARY KEY (id, stock),
+    INDEX height_id_idx (height_id),
+    INDEX width_id_idx (width_id),
+    INDEX depth_id_idx (depth_id),
+    INDEX price_id_idx (price_id),
+    INDEX color_id_idx (color_id),
+    INDEX kind_id_idx (price_id),
+    INDEX sort_idx (popurarity_rev, id),
+    INDEX low_price_sort_idx (price, id)
+)
+PARTITION BY RANGE COLUMNS(stock) (
+    PARTITION p0 VALUES LESS THAN (1),
+    PARTITION pMax VALUES LESS THAN MAXVALUE
 );
