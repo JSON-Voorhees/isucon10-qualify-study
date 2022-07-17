@@ -680,7 +680,7 @@ func postEstate(c echo.Context) error {
 	defer tx.Rollback()
 
 	query := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
-	values := make([]string, len(records)))
+	values := make([]string, len(records))
 	params := make([]interface{}, len(records))
 
 	for i, row := range records {
@@ -703,7 +703,7 @@ func postEstate(c echo.Context) error {
 		}
 		// _, err := tx.Exec("INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
 		values[i] = "(?,?,?,?,?,?,?,?,?,?,?,?)"
-		params    = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // append消したい
+		params = append(params, id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity) // append消したい
 	}
 
 	valuesList := strings.Join(values, ",")
