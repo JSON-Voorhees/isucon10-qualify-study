@@ -285,7 +285,7 @@ func main() {
 	e.Logger.SetLevel(log.DEBUG)
 
 	// Middleware
-	e.Use(middleware.Logger())
+	//e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	// Initialize
@@ -326,17 +326,17 @@ func main() {
 	}
 	dbChair.SetMaxOpenConns(10)
 	defer dbChair.Close()
+	/*
+		// スロークエリを停止
+		_, err = dbEstate.Exec("SET GLOBAL slow_query_log=0;")
+		if err != nil {
+			log.Fatalf("failed to set slow_query_log=0 on estate: %s.", err.Error())
+		}
 
-	// スロークエリを停止
-	_, err = dbEstate.Exec("SET GLOBAL slow_query_log=0;")
-	if err != nil {
-		log.Fatalf("failed to set slow_query_log=0 on estate: %s.", err.Error())
-	}
-
-	_, err = dbChair.Exec("SET GLOBAL slow_query_log=0;")
-	if err != nil {
-		log.Fatalf("failed to set slow_query_log=0 on chair: %s.", err.Error())
-	}
+		_, err = dbChair.Exec("SET GLOBAL slow_query_log=0;")
+		if err != nil {
+			log.Fatalf("failed to set slow_query_log=0 on chair: %s.", err.Error())
+		}*/
 
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
@@ -382,15 +382,16 @@ func initialize(c echo.Context) error {
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
-	// スロークエリを開始
-	_, err := dbEstate.Exec("SET GLOBAL slow_query_log=1;")
-	if err != nil {
-		log.Fatalf("failed to set slow_query_log=1 on estate: %s.", err.Error())
-	}
-	_, err = dbChair.Exec("SET GLOBAL slow_query_log=1;")
-	if err != nil {
-		log.Fatalf("failed to set slow_query_log=1 on dbChair: %s.", err.Error())
-	}
+	/*
+		// スロークエリを開始
+		_, err := dbEstate.Exec("SET GLOBAL slow_query_log=1;")
+		if err != nil {
+			log.Fatalf("failed to set slow_query_log=1 on estate: %s.", err.Error())
+		}
+		_, err = dbChair.Exec("SET GLOBAL slow_query_log=1;")
+		if err != nil {
+			log.Fatalf("failed to set slow_query_log=1 on dbChair: %s.", err.Error())
+		}*/
 
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
